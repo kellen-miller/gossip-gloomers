@@ -2,6 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 
 	cmsg "github.com/kellen-miller/gossip-gloomers/common/message"
 	"github.com/kellen-miller/gossip-gloomers/common/node"
@@ -40,6 +42,29 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	}
 
 	b.nodesSeenChan <- broadcastBody.Message
+
+	for _, neighbor := range b.node.Neighbors {
+		neighborB, err := json.Marshal(&BroadcastBody{
+			BaseBody: cmsg.BaseBody{
+				Type: BroadcastType,
+			},
+			Message: broadcastBody.Message,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		msgB, err := json.Marshal(&cmsg.Message{
+			Source:      b.node.ID,
+			Destination: neighbor,
+			Body:        neighborB,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		_, _ = fmt.Fprintf(os.Stdout, "%s\n", msgB)
+	}
 
 	replyBodyB, err := json.Marshal(&BroadcastBody{
 		BaseBody: cmsg.BaseBody{

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/kellen-miller/gossip-gloomers/common/message"
@@ -18,9 +19,10 @@ type Handler interface {
 }
 
 type Node struct {
-	ID       string
-	IDs      []string
-	handlers map[string]Handler
+	ID        string
+	IDs       []string
+	Neighbors []string
+	handlers  map[string]Handler
 }
 
 func NewNode() *Node {
@@ -43,6 +45,10 @@ func (n *Node) Handle(msg *message.Message) (*message.Message, error) {
 	base := new(message.BaseBody)
 	if err := json.Unmarshal(msg.Body, base); err != nil {
 		return nil, err
+	}
+
+	if strings.HasSuffix(base.Type, "_ok") {
+		return nil, nil
 	}
 
 	handler, ok := n.handlers[base.Type]
@@ -88,6 +94,9 @@ func (n *Node) listen() {
 		resp, err := n.Handle(msg)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stdout, "error handling message: %s\n", err)
+			continue
+		}
+		if resp == nil {
 			continue
 		}
 

@@ -16,7 +16,12 @@ tasks:
       - "cd unique-ids && task build"
       - "./maelstrom/maelstrom test -w unique-ids --bin unique-ids/build/server --time-limit 30 --rate 1000 --node-count 3 --availability total --nemesis partition"
 
-  maelstrom:broadcast:
+  maelstrom:broadcast-single:
     cmds:
       - "cd broadcast && task build"
       - "./maelstrom/maelstrom test -w broadcast --bin broadcast/build/server --node-count 1 --time-limit 20 --rate 10"
+
+  maelstrom:broadcast-multi:
+    cmds:
+      - "cd broadcast && task build"
+      - "./maelstrom/maelstrom test -w broadcast --bin broadcast/build/server --node-count 5 --time-limit 20 --rate 10"

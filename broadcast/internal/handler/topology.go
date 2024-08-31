@@ -13,8 +13,7 @@ const (
 )
 
 type Topology struct {
-	n            *node.Node
-	adjacencyMap map[string][]string
+	n *node.Node
 }
 
 type TopologyBody struct {
@@ -36,7 +35,9 @@ func (t *Topology) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		return nil, err
 	}
 
-	t.adjacencyMap = topologyBody.Topology
+	if neighbors, ok := topologyBody.Topology[t.n.ID]; ok {
+		t.n.Neighbors = neighbors
+	}
 
 	replyBodyB, err := json.Marshal(&TopologyBody{
 		BaseBody: cmsg.BaseBody{
