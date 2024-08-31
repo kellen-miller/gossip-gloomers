@@ -1,21 +1,24 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 
 	cmsg "github.com/kellen-miller/gossip-gloomers/common/message"
 	cnode "github.com/kellen-miller/gossip-gloomers/common/node"
-	"github.com/kellen-miller/gossip-gloomers/echo/internal/message"
 )
 
 const (
 	EchoType      = "echo"
-	EchoTypeReply = EchoType + "_ok"
+	EchoReplyType = EchoType + "_ok"
 )
 
 type Echo struct {
 	node *cnode.Node
+}
+
+type EchoBody struct {
+	cmsg.BaseBody
+	Echo string `json:"echo"`
 }
 
 func NewEcho(n *cnode.Node) *Echo {
@@ -28,16 +31,16 @@ func (e *Echo) Type() string {
 	return EchoType
 }
 
-func (e *Echo) Handle(_ context.Context, msg *cmsg.Message) (*cmsg.Message, error) {
-	echoBody := new(message.EchoBody)
+func (e *Echo) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
+	echoBody := new(EchoBody)
 	if err := json.Unmarshal(msg.Body, echoBody); err != nil {
 		return nil, err
 	}
 
-	echoBody.Type = EchoTypeReply
+	echoBody.Type = EchoReplyType
 	echoBody.InReplyTo = echoBody.MessageID
 
-	body, err := json.Marshal(echoBody)
+	echoBodyB, err := json.Marshal(echoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +48,6 @@ func (e *Echo) Handle(_ context.Context, msg *cmsg.Message) (*cmsg.Message, erro
 	return &cmsg.Message{
 		Source:      e.node.ID,
 		Destination: msg.Source,
-		Body:        body,
+		Body:        echoBodyB,
 	}, nil
 }

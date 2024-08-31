@@ -1,14 +1,24 @@
 package node
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/kellen-miller/gossip-gloomers/common/message"
 )
 
+const (
+	InitType      = "init"
+	InitReplyType = InitType + "_ok"
+)
+
 type Init struct {
 	node *Node
+}
+
+type InitBody struct {
+	message.BaseBody
+	NodeID  string   `json:"node_id"`
+	NodeIDs []string `json:"node_ids"`
 }
 
 func NewInit(n *Node) *Init {
@@ -18,11 +28,11 @@ func NewInit(n *Node) *Init {
 }
 
 func (i *Init) Type() string {
-	return message.InitType
+	return InitType
 }
 
-func (i *Init) Handle(_ context.Context, msg *message.Message) (*message.Message, error) {
-	initMsg := new(message.InitBody)
+func (i *Init) Handle(msg *message.Message) (*message.Message, error) {
+	initMsg := new(InitBody)
 	if err := json.Unmarshal(msg.Body, initMsg); err != nil {
 		return nil, err
 	}
@@ -31,7 +41,7 @@ func (i *Init) Handle(_ context.Context, msg *message.Message) (*message.Message
 	i.node.IDs = initMsg.NodeIDs
 
 	bodyB, err := json.Marshal(&message.BaseBody{
-		Type:      message.InitReplyType,
+		Type:      InitReplyType,
 		InReplyTo: initMsg.MessageID,
 	})
 	if err != nil {

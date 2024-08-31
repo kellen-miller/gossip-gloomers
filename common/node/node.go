@@ -13,7 +13,7 @@ import (
 )
 
 type Handler interface {
-	Handle(ctx context.Context, msg *message.Message) (*message.Message, error)
+	Handle(msg *message.Message) (*message.Message, error)
 	Type() string
 }
 
@@ -50,7 +50,7 @@ func (n *Node) Handle(ctx context.Context, msg *message.Message) (*message.Messa
 		return nil, fmt.Errorf("no handler for message type %s", base.Type)
 	}
 
-	return handler.Handle(ctx, msg)
+	return handler.Handle(msg)
 }
 
 func (n *Node) Start(ctx context.Context) {
