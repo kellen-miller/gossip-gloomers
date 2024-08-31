@@ -1,0 +1,15 @@
+version: "3"
+
+tasks:
+  build:
+    dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - "go build -o ./build/server ./cmd/server"
+  maelstrom:echo:
+    cmds:
+      - "cd echo && task build"
+      - "maelstrom/maelstrom test -w echo --bin ./echo/build/server --node-count 1 --time-limit 10"
+  maelstrom:unique-ids:
+    cmds:
+      - "cd unique-ids && task build"
+      - "maelstrom/maelstrom test -w unique-ids --bin unique-ids/build/server --time-limit 30 --rate 1000 --node-count 3 --availability total --nemesis partition"
