@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ReadType       = "read"
-	ReadeReplyType = ReadType + "_ok"
+	ReadType      = "read"
+	ReadReplyType = ReadType + "_ok"
 )
 
 type Read struct {
@@ -44,14 +44,10 @@ func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		return nil, err
 	}
 
-	replyBody := &ReadBody{
-		BaseBody: cmsg.BaseBody{
-			Type: ReadeReplyType,
-		},
-		Messages: r.valsSeenSet.Values(),
-	}
+	readBody.Type = ReadReplyType
+	readBody.Messages = r.valsSeenSet.Values()
 
-	replyBodyB, err := json.Marshal(replyBody)
+	readBodyB, err := json.Marshal(readBody)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +55,7 @@ func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	return &cmsg.Message{
 		Source:      r.n.ID,
 		Destination: msg.Source,
-		Body:        replyBodyB,
+		Body:        readBodyB,
 	}, nil
 }
 

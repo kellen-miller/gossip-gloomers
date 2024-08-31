@@ -30,16 +30,16 @@ func NewGenerator(n *node.Node) *Generator {
 }
 
 func (g *Generator) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
-	body := new(GenerateBody)
-	if err := json.Unmarshal(msg.Body, body); err != nil {
+	genBody := new(GenerateBody)
+	if err := json.Unmarshal(msg.Body, genBody); err != nil {
 		return nil, err
 	}
 
-	body.ID = generateID()
-	body.Type = GenerateReplyType
-	body.InReplyTo = body.MessageID
+	genBody.ID = generateID()
+	genBody.Type = GenerateReplyType
+	genBody.InReplyTo = genBody.MessageID
 
-	bodyJ, err := json.Marshal(body)
+	genBodyB, err := json.Marshal(genBody)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (g *Generator) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	return &cmsg.Message{
 		Source:      g.node.ID,
 		Destination: msg.Source,
-		Body:        bodyJ,
+		Body:        genBodyB,
 	}, nil
 }
 
