@@ -1,18 +1,17 @@
-package handler
+package node
 
 import (
 	"context"
 	"encoding/json"
 
 	"github.com/kellen-miller/gossip-gloomers/common/message"
-	"github.com/kellen-miller/gossip-gloomers/common/node"
 )
 
 type Init struct {
-	node *node.Node
+	node *Node
 }
 
-func NewInit(n *node.Node) *Init {
+func NewInit(n *Node) *Init {
 	return &Init{
 		node: n,
 	}

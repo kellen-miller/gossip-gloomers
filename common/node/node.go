@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/kellen-miller/gossip-gloomers/common/handler"
 	"github.com/kellen-miller/gossip-gloomers/common/message"
 )
 
@@ -26,7 +25,7 @@ type Node struct {
 
 func NewNode() *Node {
 	n := &Node{handlers: make(map[string]Handler)}
-	n.RegisterHandlers(handler.NewInit(n))
+	n.RegisterHandlers(NewInit(n))
 	return n
 }
 
