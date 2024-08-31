@@ -40,7 +40,8 @@ func (t *Topology) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 
 	replyBodyB, err := json.Marshal(&TopologyBody{
 		BaseBody: cmsg.BaseBody{
-			Type: TopologyTypeReply,
+			Type:      TopologyTypeReply,
+			InReplyTo: topologyBody.MessageID,
 		},
 	})
 	if err != nil {

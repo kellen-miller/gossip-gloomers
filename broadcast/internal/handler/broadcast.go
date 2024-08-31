@@ -43,7 +43,8 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 
 	replyBodyB, err := json.Marshal(&BroadcastBody{
 		BaseBody: cmsg.BaseBody{
-			Type: BroadcastReplyType,
+			Type:      BroadcastReplyType,
+			InReplyTo: broadcastBody.MessageID,
 		},
 	})
 	if err != nil {

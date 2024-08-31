@@ -46,7 +46,8 @@ func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 
 	replyBodyB, err := json.Marshal(&ReadBody{
 		BaseBody: cmsg.BaseBody{
-			Type: ReadReplyType,
+			Type:      ReadReplyType,
+			InReplyTo: readBody.MessageID,
 		},
 		Messages: r.valsSeenSet.Values(),
 	})
