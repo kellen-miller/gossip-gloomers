@@ -19,6 +19,7 @@ func main() {
 	n.RegisterHandlers(
 		handler.NewBroadcast(n, valsSeenChan),
 		handler.NewRead(ctx, n, valsSeenChan),
+		handler.NewTopology(n),
 	)
 
 	n.Listen(ctx)
