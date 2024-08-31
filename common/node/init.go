@@ -42,6 +42,7 @@ func (i *Init) Handle(msg *message.Message) (*message.Message, error) {
 
 	replyBodyB, err := json.Marshal(&message.BaseBody{
 		Type:      InitReplyType,
+		MessageID: initBody.MessageID,
 		InReplyTo: initBody.MessageID,
 	})
 	if err != nil {

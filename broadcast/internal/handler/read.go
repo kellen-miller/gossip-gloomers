@@ -21,7 +21,7 @@ type Read struct {
 
 type ReadBody struct {
 	cmsg.BaseBody
-	Messages []int `json:"messages,omitempty"`
+	Messages []int `json:"messages"`
 }
 
 func NewRead(ctx context.Context, n *node.Node, valsSeenChan chan int) *Read {

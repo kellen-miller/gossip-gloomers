@@ -38,6 +38,7 @@ func (g *Generator) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	replyBodyB, err := json.Marshal(&GenerateBody{
 		BaseBody: cmsg.BaseBody{
 			Type:      GenerateReplyType,
+			MessageID: genBody.MessageID,
 			InReplyTo: genBody.MessageID,
 		},
 		ID: generateID(),

@@ -40,6 +40,7 @@ func (e *Echo) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	echoBodyB, err := json.Marshal(&EchoBody{
 		BaseBody: cmsg.BaseBody{
 			Type:      EchoReplyType,
+			MessageID: echoBody.MessageID,
 			InReplyTo: echoBody.MessageID,
 		},
 		Echo: echoBody.Echo,

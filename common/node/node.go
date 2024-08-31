@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/kellen-miller/gossip-gloomers/common/message"
+	"github.com/ugurcsen/gods-generic/sets/hashset"
 )
 
 type Handler interface {
@@ -19,14 +20,18 @@ type Handler interface {
 }
 
 type Node struct {
-	ID        string
-	IDs       []string
-	Neighbors []string
-	handlers  map[string]Handler
+	ID             string
+	IDs            []string
+	Neighbors      []string
+	MessageIDsSeen *hashset.Set[int]
+	handlers       map[string]Handler
 }
 
 func NewNode() *Node {
-	n := &Node{handlers: make(map[string]Handler)}
+	n := &Node{
+		MessageIDsSeen: hashset.New[int](),
+		handlers:       make(map[string]Handler),
+	}
 	n.RegisterHandlers(NewInit(n))
 	return n
 }
@@ -50,6 +55,12 @@ func (n *Node) Handle(msg *message.Message) (*message.Message, error) {
 	if strings.HasSuffix(base.Type, "_ok") {
 		return nil, nil
 	}
+
+	if n.MessageIDsSeen.Contains(base.MessageID) {
+		return nil, nil
+	}
+
+	n.MessageIDsSeen.Add(base.MessageID)
 
 	handler, ok := n.handlers[base.Type]
 	if !ok {
