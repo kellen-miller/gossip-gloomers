@@ -21,7 +21,7 @@ type Read struct {
 
 type ReadBody struct {
 	cmsg.BaseBody
-	Messages []int `json:"messages"`
+	Messages []int `json:"messages,omitempty"`
 }
 
 func NewRead(ctx context.Context, n *node.Node, valsSeenChan chan int) *Read {
@@ -44,10 +44,12 @@ func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		return nil, err
 	}
 
-	readBody.Type = ReadReplyType
-	readBody.Messages = r.valsSeenSet.Values()
-
-	readBodyB, err := json.Marshal(readBody)
+	replyBodyB, err := json.Marshal(&ReadBody{
+		BaseBody: cmsg.BaseBody{
+			Type: ReadReplyType,
+		},
+		Messages: r.valsSeenSet.Values(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,7 @@ func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	return &cmsg.Message{
 		Source:      r.n.ID,
 		Destination: msg.Source,
-		Body:        readBodyB,
+		Body:        replyBodyB,
 	}, nil
 }
 

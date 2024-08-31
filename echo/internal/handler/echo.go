@@ -37,10 +37,13 @@ func (e *Echo) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		return nil, err
 	}
 
-	echoBody.Type = EchoReplyType
-	echoBody.InReplyTo = echoBody.MessageID
-
-	echoBodyB, err := json.Marshal(echoBody)
+	echoBodyB, err := json.Marshal(&EchoBody{
+		BaseBody: cmsg.BaseBody{
+			Type:      EchoReplyType,
+			InReplyTo: echoBody.MessageID,
+		},
+		Echo: echoBody.Echo,
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -35,11 +35,13 @@ func (g *Generator) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		return nil, err
 	}
 
-	genBody.ID = generateID()
-	genBody.Type = GenerateReplyType
-	genBody.InReplyTo = genBody.MessageID
-
-	genBodyB, err := json.Marshal(genBody)
+	replyBodyB, err := json.Marshal(&GenerateBody{
+		BaseBody: cmsg.BaseBody{
+			Type:      GenerateReplyType,
+			InReplyTo: genBody.MessageID,
+		},
+		ID: generateID(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +49,7 @@ func (g *Generator) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	return &cmsg.Message{
 		Source:      g.node.ID,
 		Destination: msg.Source,
-		Body:        genBodyB,
+		Body:        replyBodyB,
 	}, nil
 }
 

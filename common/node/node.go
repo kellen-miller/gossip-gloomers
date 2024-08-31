@@ -39,7 +39,7 @@ func (n *Node) RegisterHandlers(handlers ...Handler) {
 	}
 }
 
-func (n *Node) Handle(ctx context.Context, msg *message.Message) (*message.Message, error) {
+func (n *Node) Handle(msg *message.Message) (*message.Message, error) {
 	base := new(message.BaseBody)
 	if err := json.Unmarshal(msg.Body, base); err != nil {
 		return nil, err
@@ -54,9 +54,6 @@ func (n *Node) Handle(ctx context.Context, msg *message.Message) (*message.Messa
 }
 
 func (n *Node) Listen(ctx context.Context) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -64,23 +61,20 @@ func (n *Node) Listen(ctx context.Context) {
 
 	go func() {
 		defer close(done)
-		n.listen(ctx)
+		n.listen()
 	}()
 
 	select {
 	case <-ctx.Done():
-		fmt.Println("Context cancelled. Shutting down...")
+		println("Context cancelled. Shutting down...")
 	case <-sigChan:
-		fmt.Println("Received interrupt signal. Shutting down...")
-		cancel()
+		println("Received interrupt signal. Shutting down...")
 	case <-done:
-		fmt.Println("Message processing completed. Shutting down...")
+		println("Message processing completed. Shutting down...")
 	}
-
-	<-done
 }
 
-func (n *Node) listen(ctx context.Context) {
+func (n *Node) listen() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		bytes := scanner.Bytes()
@@ -91,7 +85,7 @@ func (n *Node) listen(ctx context.Context) {
 			continue
 		}
 
-		resp, err := n.Handle(ctx, msg)
+		resp, err := n.Handle(msg)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stdout, "error handling message: %s\n", err)
 			continue

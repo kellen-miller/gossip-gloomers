@@ -19,7 +19,7 @@ type Broadcast struct {
 
 type BroadcastBody struct {
 	cmsg.BaseBody
-	Message int `json:"message"`
+	Message int `json:"message,omitempty"`
 }
 
 func NewBroadcast(n *node.Node, valsSeenChan chan int) *Broadcast {
@@ -41,13 +41,11 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 
 	b.nodesSeenChan <- broadcastBody.Message
 
-	replyBody := &BroadcastBody{
+	replyBodyB, err := json.Marshal(&BroadcastBody{
 		BaseBody: cmsg.BaseBody{
 			Type: BroadcastReplyType,
 		},
-	}
-
-	replyBodyB, err := json.Marshal(replyBody)
+	})
 	if err != nil {
 		return nil, err
 	}

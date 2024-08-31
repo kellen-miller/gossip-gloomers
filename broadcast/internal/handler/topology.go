@@ -19,7 +19,7 @@ type Topology struct {
 
 type TopologyBody struct {
 	cmsg.BaseBody
-	Topology map[string][]string `json:"topology"`
+	Topology map[string][]string `json:"topology,omitempty"`
 }
 
 func NewTopology(n *node.Node) *Topology {
@@ -38,9 +38,11 @@ func (t *Topology) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 
 	t.adjacencyMap = topologyBody.Topology
 
-	topologyBody.Type = TopologyTypeReply
-
-	topologyBodyB, err := json.Marshal(topologyBody)
+	replyBodyB, err := json.Marshal(&TopologyBody{
+		BaseBody: cmsg.BaseBody{
+			Type: TopologyTypeReply,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +50,6 @@ func (t *Topology) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	return &cmsg.Message{
 		Source:      t.n.ID,
 		Destination: msg.Source,
-		Body:        topologyBodyB,
+		Body:        replyBodyB,
 	}, nil
 }

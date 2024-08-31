@@ -32,17 +32,17 @@ func (i *Init) Type() string {
 }
 
 func (i *Init) Handle(msg *message.Message) (*message.Message, error) {
-	initMsg := new(InitBody)
-	if err := json.Unmarshal(msg.Body, initMsg); err != nil {
+	initBody := new(InitBody)
+	if err := json.Unmarshal(msg.Body, initBody); err != nil {
 		return nil, err
 	}
 
-	i.node.ID = initMsg.NodeID
-	i.node.IDs = initMsg.NodeIDs
+	i.node.ID = initBody.NodeID
+	i.node.IDs = initBody.NodeIDs
 
-	bodyB, err := json.Marshal(&message.BaseBody{
+	replyBodyB, err := json.Marshal(&message.BaseBody{
 		Type:      InitReplyType,
-		InReplyTo: initMsg.MessageID,
+		InReplyTo: initBody.MessageID,
 	})
 	if err != nil {
 		return nil, err
@@ -51,6 +51,6 @@ func (i *Init) Handle(msg *message.Message) (*message.Message, error) {
 	return &message.Message{
 		Source:      i.node.ID,
 		Destination: msg.Source,
-		Body:        bodyB,
+		Body:        replyBodyB,
 	}, nil
 }
