@@ -10,5 +10,5 @@ import (
 func main() {
 	n := node.NewNode()
 	n.RegisterHandlers(handler.NewEcho(n))
-	n.Start(context.Background())
+	n.Listen(context.Background())
 }

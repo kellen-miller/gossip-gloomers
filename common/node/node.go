@@ -53,7 +53,7 @@ func (n *Node) Handle(ctx context.Context, msg *message.Message) (*message.Messa
 	return handler.Handle(msg)
 }
 
-func (n *Node) Start(ctx context.Context) {
+func (n *Node) Listen(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

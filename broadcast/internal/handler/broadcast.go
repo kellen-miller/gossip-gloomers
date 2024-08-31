@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 
-	"github.com/kellen-miller/gossip-gloomers/broadcast/internal/message"
 	cmsg "github.com/kellen-miller/gossip-gloomers/common/message"
 	"github.com/kellen-miller/gossip-gloomers/common/node"
 )
@@ -23,10 +22,10 @@ type BroadcastBody struct {
 	Message int `json:"message"`
 }
 
-func NewBroadcast(n *node.Node, nodesSeenChan chan int) *Broadcast {
+func NewBroadcast(n *node.Node, valsSeenChan chan int) *Broadcast {
 	return &Broadcast{
 		node:          n,
-		nodesSeenChan: nodesSeenChan,
+		nodesSeenChan: valsSeenChan,
 	}
 }
 
@@ -35,14 +34,14 @@ func (b *Broadcast) Type() string {
 }
 
 func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
-	broadcastBody := new(message.BroadcastBody)
+	broadcastBody := new(BroadcastBody)
 	if err := json.Unmarshal(msg.Body, broadcastBody); err != nil {
 		return nil, err
 	}
 
 	b.nodesSeenChan <- broadcastBody.Message
 
-	replyBody := &message.BroadcastBody{
+	replyBody := &BroadcastBody{
 		BaseBody: cmsg.BaseBody{
 			Type: BroadcastReplyType,
 		},

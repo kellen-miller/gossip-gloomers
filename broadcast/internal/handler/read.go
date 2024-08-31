@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 
 	cmsg "github.com/kellen-miller/gossip-gloomers/common/message"
 	"github.com/kellen-miller/gossip-gloomers/common/node"
@@ -14,21 +15,22 @@ const (
 )
 
 type Read struct {
-	n            *node.Node
-	nodesSeenSet *hashset.Set[int]
+	n           *node.Node
+	valsSeenSet *hashset.Set[int]
 }
 
 type ReadBody struct {
 	cmsg.BaseBody
+	Messages []int `json:"messages"`
 }
 
-func NewRead(ctx context.Context, n *node.Node, nodesSeenChan chan int) *Read {
+func NewRead(ctx context.Context, n *node.Node, valsSeenChan chan int) *Read {
 	r := &Read{
-		n:            n,
-		nodesSeenSet: hashset.New[int](),
+		n:           n,
+		valsSeenSet: hashset.New[int](),
 	}
 
-	go r.processSeenChan(ctx, nodesSeenChan)
+	go r.processSeenChan(ctx, valsSeenChan)
 	return r
 }
 
@@ -37,7 +39,28 @@ func (r *Read) Type() string {
 }
 
 func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
-	return nil, nil
+	readBody := new(ReadBody)
+	if err := json.Unmarshal(msg.Body, readBody); err != nil {
+		return nil, err
+	}
+
+	replyBody := &ReadBody{
+		BaseBody: cmsg.BaseBody{
+			Type: ReadeReplyType,
+		},
+		Messages: r.valsSeenSet.Values(),
+	}
+
+	replyBodyB, err := json.Marshal(replyBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cmsg.Message{
+		Source:      r.n.ID,
+		Destination: msg.Source,
+		Body:        replyBodyB,
+	}, nil
 }
 
 func (r *Read) processSeenChan(ctx context.Context, seenChan chan int) {
@@ -46,7 +69,7 @@ func (r *Read) processSeenChan(ctx context.Context, seenChan chan int) {
 	for {
 		select {
 		case nodeID := <-seenChan:
-			r.nodesSeenSet.Add(nodeID)
+			r.valsSeenSet.Add(nodeID)
 		case <-ctx.Done():
 			return
 		}
