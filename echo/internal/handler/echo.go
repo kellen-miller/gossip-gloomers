@@ -29,7 +29,7 @@ func (e *Echo) Type() string {
 }
 
 func (e *Echo) Handle(_ context.Context, msg *cmsg.Message) (*cmsg.Message, error) {
-	echoBody := new(message.Echo)
+	echoBody := new(message.EchoBody)
 	if err := json.Unmarshal(msg.Body, echoBody); err != nil {
 		return nil, err
 	}

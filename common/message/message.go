@@ -8,7 +8,7 @@ type Message struct {
 	Body        json.RawMessage `json:"body"`
 }
 
-type Base struct {
+type BaseBody struct {
 	Type      string `json:"type"`
 	MessageID int    `json:"msg_id,omitempty"`
 	InReplyTo int    `json:"in_reply_to,omitempty"`

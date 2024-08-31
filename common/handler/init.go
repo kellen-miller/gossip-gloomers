@@ -23,7 +23,7 @@ func (i *Init) Type() string {
 }
 
 func (i *Init) Handle(_ context.Context, msg *message.Message) (*message.Message, error) {
-	initMsg := new(message.Init)
+	initMsg := new(message.InitBody)
 	if err := json.Unmarshal(msg.Body, initMsg); err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (i *Init) Handle(_ context.Context, msg *message.Message) (*message.Message
 	i.node.ID = initMsg.NodeID
 	i.node.IDs = initMsg.NodeIDs
 
-	bodyB, err := json.Marshal(&message.Base{
+	bodyB, err := json.Marshal(&message.BaseBody{
 		Type:      message.InitReplyType,
 		InReplyTo: initMsg.MessageID,
 	})

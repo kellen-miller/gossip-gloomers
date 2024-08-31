@@ -5,8 +5,8 @@ const (
 	InitReplyType = InitType + "_ok"
 )
 
-type Init struct {
-	Base
+type InitBody struct {
+	BaseBody
 	NodeID  string   `json:"node_id"`
 	NodeIDs []string `json:"node_ids"`
 }

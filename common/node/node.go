@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/kellen-miller/gossip-gloomers/common/handler"
 	"github.com/kellen-miller/gossip-gloomers/common/message"
 )
 
@@ -24,19 +25,23 @@ type Node struct {
 }
 
 func NewNode() *Node {
-	return &Node{
-		handlers: make(map[string]Handler),
-	}
+	n := &Node{handlers: make(map[string]Handler)}
+	n.RegisterHandlers(handler.NewInit(n))
+	return n
 }
 
-func (n *Node) RegisterHandlers(handler ...Handler) {
-	for _, h := range handler {
+func (n *Node) RegisterHandlers(handlers ...Handler) {
+	if n.handlers == nil {
+		n.handlers = make(map[string]Handler, len(handlers))
+	}
+
+	for _, h := range handlers {
 		n.handlers[h.Type()] = h
 	}
 }
 
 func (n *Node) Handle(ctx context.Context, msg *message.Message) (*message.Message, error) {
-	base := new(message.Base)
+	base := new(message.BaseBody)
 	if err := json.Unmarshal(msg.Body, base); err != nil {
 		return nil, err
 	}
