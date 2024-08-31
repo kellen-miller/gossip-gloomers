@@ -13,12 +13,12 @@ func main() {
 
 	var (
 		n            = node.NewNode()
-		valsSeenChan = make(chan int)
+		messagesChan = make(chan int)
 	)
 
 	n.RegisterHandlers(
-		handler.NewBroadcast(n, valsSeenChan),
-		handler.NewRead(ctx, n, valsSeenChan),
+		handler.NewBroadcast(n, messagesChan),
+		handler.NewRead(ctx, n, messagesChan),
 		handler.NewTopology(n),
 	)
 

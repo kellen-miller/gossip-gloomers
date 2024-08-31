@@ -27,8 +27,8 @@ func NewEcho(n *cnode.Node) *Echo {
 	}
 }
 
-func (e *Echo) Type() string {
-	return EchoType
+func (e *Echo) Types() []string {
+	return []string{EchoType}
 }
 
 func (e *Echo) Handle(msg *cmsg.Message) (*cmsg.Message, error) {

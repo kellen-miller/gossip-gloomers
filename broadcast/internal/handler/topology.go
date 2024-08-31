@@ -25,8 +25,8 @@ func NewTopology(n *node.Node) *Topology {
 	return &Topology{n: n}
 }
 
-func (t *Topology) Type() string {
-	return TopologyType
+func (t *Topology) Types() []string {
+	return []string{TopologyType}
 }
 
 func (t *Topology) Handle(msg *cmsg.Message) (*cmsg.Message, error) {

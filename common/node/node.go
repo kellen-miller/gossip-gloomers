@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/kellen-miller/gossip-gloomers/common/message"
@@ -16,22 +15,23 @@ import (
 
 type Handler interface {
 	Handle(msg *message.Message) (*message.Message, error)
-	Type() string
+	Types() []string
 }
 
 type Node struct {
-	ID             string
-	IDs            []string
-	Neighbors      []string
-	MessageIDsSeen *hashset.Set[int]
-	handlers       map[string]Handler
+	ID                   string
+	IDs                  []string
+	Neighbors            []string
+	typeToMessageIDsSeen map[string]*hashset.Set[int]
+	handlers             map[string]Handler
 }
 
 func NewNode() *Node {
 	n := &Node{
-		MessageIDsSeen: hashset.New[int](),
-		handlers:       make(map[string]Handler),
+		typeToMessageIDsSeen: make(map[string]*hashset.Set[int]),
+		handlers:             make(map[string]Handler),
 	}
+
 	n.RegisterHandlers(NewInit(n))
 	return n
 }
@@ -42,29 +42,25 @@ func (n *Node) RegisterHandlers(handlers ...Handler) {
 	}
 
 	for _, h := range handlers {
-		n.handlers[h.Type()] = h
+		for _, t := range h.Types() {
+			n.handlers[t] = h
+		}
 	}
 }
 
 func (n *Node) Handle(msg *message.Message) (*message.Message, error) {
-	base := new(message.BaseBody)
-	if err := json.Unmarshal(msg.Body, base); err != nil {
+	baseBody := new(message.BaseBody)
+	if err := json.Unmarshal(msg.Body, baseBody); err != nil {
 		return nil, err
 	}
 
-	if strings.HasSuffix(base.Type, "_ok") {
+	if n.checkMessageIDsSeen(baseBody.Type, baseBody.MessageID) {
 		return nil, nil
 	}
 
-	if n.MessageIDsSeen.Contains(base.MessageID) {
-		return nil, nil
-	}
-
-	n.MessageIDsSeen.Add(base.MessageID)
-
-	handler, ok := n.handlers[base.Type]
+	handler, ok := n.handlers[baseBody.Type]
 	if !ok {
-		return nil, fmt.Errorf("no handler for message type %s", base.Type)
+		return nil, fmt.Errorf("no handler for message type %s", baseBody.Type)
 	}
 
 	return handler.Handle(msg)
@@ -89,6 +85,16 @@ func (n *Node) Listen(ctx context.Context) {
 	case <-done:
 		println("Message processing completed. Shutting down...")
 	}
+}
+
+func (n *Node) checkMessageIDsSeen(kind string, msgID int) bool {
+	seen, ok := n.typeToMessageIDsSeen[kind]
+	if !ok {
+		n.typeToMessageIDsSeen[kind] = hashset.New[int]()
+		return false
+	}
+
+	return seen.Contains(msgID)
 }
 
 func (n *Node) listen() {

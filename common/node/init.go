@@ -27,8 +27,8 @@ func NewInit(n *Node) *Init {
 	}
 }
 
-func (i *Init) Type() string {
-	return InitType
+func (i *Init) Types() []string {
+	return []string{InitType}
 }
 
 func (i *Init) Handle(msg *message.Message) (*message.Message, error) {

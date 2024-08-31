@@ -15,8 +15,8 @@ const (
 )
 
 type Broadcast struct {
-	node          *node.Node
-	nodesSeenChan chan int
+	node         *node.Node
+	messagesChan chan int
 }
 
 type BroadcastBody struct {
@@ -24,15 +24,15 @@ type BroadcastBody struct {
 	Message int `json:"message,omitempty"`
 }
 
-func NewBroadcast(n *node.Node, valsSeenChan chan int) *Broadcast {
+func NewBroadcast(n *node.Node, msgsChan chan int) *Broadcast {
 	return &Broadcast{
-		node:          n,
-		nodesSeenChan: valsSeenChan,
+		node:         n,
+		messagesChan: msgsChan,
 	}
 }
 
-func (b *Broadcast) Type() string {
-	return BroadcastType
+func (b *Broadcast) Types() []string {
+	return []string{BroadcastType, BroadcastReplyType}
 }
 
 func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
@@ -41,7 +41,11 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		return nil, err
 	}
 
-	b.nodesSeenChan <- broadcastBody.Message
+	if broadcastBody.Type == BroadcastReplyType {
+		return nil, nil
+	}
+
+	b.messagesChan <- broadcastBody.Message
 
 	for _, neighbor := range b.node.Neighbors {
 		neighborB, err := json.Marshal(&BroadcastBody{

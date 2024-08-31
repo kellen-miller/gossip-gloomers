@@ -54,8 +54,8 @@ func (g *Generator) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	}, nil
 }
 
-func (g *Generator) Type() string {
-	return GenerateType
+func (g *Generator) Types() []string {
+	return []string{GenerateType}
 }
 
 func generateID() string {

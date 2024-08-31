@@ -34,8 +34,8 @@ func NewRead(ctx context.Context, n *node.Node, valsSeenChan chan int) *Read {
 	return r
 }
 
-func (r *Read) Type() string {
-	return ReadType
+func (r *Read) Types() []string {
+	return []string{ReadType}
 }
 
 func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
