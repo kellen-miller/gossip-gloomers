@@ -1,6 +1,30 @@
 version: "3"
 
 tasks:
+
+  install:
+    vars:
+      MAELSTROM_VERSION: "v0.2.3"
+    cmds:
+      - "brew install openjdk graphviz gnuplot"
+      - "curl -L https://github.com/jepsen-io/maelstrom/releases/download/{{.MAELSTROM_VERSION}}/maelstrom.tar.bz2 -o $HOME/Downloads/maelstrom.tar.bz2"
+      - "tar -xjvf $HOME/Downloads/maelstrom.tar.bz2 -C $HOME/Downloads"
+      - "hash -r"
+      - "sudo rm -rf /usr/local/share/maelstrom"
+      - "sudo rm -f /usr/local/bin/maelstrom"
+      - "sudo mkdir -p /usr/local/share/maelstrom"
+      - "sudo mv $HOME/Downloads/maelstrom/lib /usr/local/share/maelstrom/lib/"
+      - "sudo mv $HOME/Downloads/maelstrom/maelstrom /usr/local/share/maelstrom/maelstrom"
+      - |
+        sudo tee /usr/local/bin/maelstrom << EOF
+        #!/bin/bash
+        cd /usr/local/share/maelstrom
+        exec ./maelstrom "\$@"
+        EOF
+      - "sudo chmod +x /usr/local/bin/maelstrom"
+      - "rm $HOME/Downloads/maelstrom.tar.bz2"
+      - "rm -rf $HOME/Downloads/maelstrom"
+
   build:
     dir: "{{.USER_WORKING_DIR}}"
     cmds:
