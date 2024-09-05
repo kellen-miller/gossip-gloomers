@@ -14,7 +14,7 @@ import (
 	"github.com/ugurcsen/gods-generic/sets/hashset"
 )
 
-var ErrFireAndForget = errors.New("fire and forget")
+var ErrNilResp = errors.New("fire and forget")
 
 type Handler interface {
 	Handle(msg *message.Message) (*message.Message, error)
@@ -90,6 +90,15 @@ func (n *Node) Listen(ctx context.Context) {
 	}
 }
 
+func (n *Node) Send(msg *message.Message) {
+	respB, err := json.Marshal(msg)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stdout, "error marshalling response: %s\n", err)
+	}
+
+	_, _ = fmt.Fprintf(os.Stdout, "%s\n", respB)
+}
+
 func (n *Node) checkMessageIDsSeen(kind string, msgID int) bool {
 	seen, ok := n.typeToMessageIDsSeen[kind]
 	if !ok {
@@ -113,20 +122,14 @@ func (n *Node) listen() {
 
 		resp, err := n.Handle(msg)
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stdout, "error handling message: %s\n", err)
-			continue
-		}
-		if resp == nil {
+			if !errors.Is(err, ErrNilResp) {
+				_, _ = fmt.Fprintf(os.Stdout, "error handling message: %s\n", err)
+			}
+
 			continue
 		}
 
-		respB, err := json.Marshal(resp)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stdout, "error marshalling response: %s\n", err)
-			continue
-		}
-
-		_, _ = fmt.Fprintf(os.Stdout, "%s\n", respB)
+		n.Send(resp)
 	}
 
 	if err := scanner.Err(); err != nil {

@@ -2,8 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 
 	cmsg "github.com/kellen-miller/gossip-gloomers/common/message"
 	"github.com/kellen-miller/gossip-gloomers/common/node"
@@ -51,7 +49,7 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 	}
 
 	if broadcastBody.MessageID == 0 || broadcastBody.Type == BroadcastReplyType {
-		return nil, nil
+		return nil, node.ErrNilResp
 	}
 
 	replyBodyB, err := json.Marshal(&BroadcastBody{
@@ -74,7 +72,7 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 
 func (b *Broadcast) notifyNeighbors(bb *BroadcastBody) error {
 	for _, neighbor := range b.node.Neighbors {
-		neighborB, err := json.Marshal(&BroadcastBody{
+		bodyB, err := json.Marshal(&BroadcastBody{
 			BaseBody: cmsg.BaseBody{
 				Type: BroadcastType,
 			},
@@ -84,16 +82,11 @@ func (b *Broadcast) notifyNeighbors(bb *BroadcastBody) error {
 			return err
 		}
 
-		msgB, err := json.Marshal(&cmsg.Message{
+		b.node.Send(&cmsg.Message{
 			Source:      b.node.ID,
 			Destination: neighbor,
-			Body:        neighborB,
+			Body:        bodyB,
 		})
-		if err != nil {
-			return err
-		}
-
-		_, _ = fmt.Fprintf(os.Stdout, "%s\n", msgB)
 	}
 
 	return nil
