@@ -7,6 +7,7 @@ import (
 
 	cmsg "github.com/kellen-miller/gossip-gloomers/common/message"
 	"github.com/kellen-miller/gossip-gloomers/common/node"
+	"github.com/ugurcsen/gods-generic/sets/hashset"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 
 type Broadcast struct {
 	node         *node.Node
-	messagesChan chan int
+	messagesSeen *hashset.Set[int]
 }
 
 type BroadcastBody struct {
@@ -24,10 +25,10 @@ type BroadcastBody struct {
 	Message int `json:"message,omitempty"`
 }
 
-func NewBroadcast(n *node.Node, msgsChan chan int) *Broadcast {
+func NewBroadcast(n *node.Node, messagesSeen *hashset.Set[int]) *Broadcast {
 	return &Broadcast{
 		node:         n,
-		messagesChan: msgsChan,
+		messagesSeen: messagesSeen,
 	}
 }
 
@@ -41,33 +42,16 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		return nil, err
 	}
 
-	if broadcastBody.Type == BroadcastReplyType {
-		return nil, nil
+	if !b.messagesSeen.Contains(broadcastBody.Message) {
+		b.messagesSeen.Add(broadcastBody.Message)
+
+		if err := b.notifyNeighbors(broadcastBody); err != nil {
+			return nil, err
+		}
 	}
 
-	b.messagesChan <- broadcastBody.Message
-
-	for _, neighbor := range b.node.Neighbors {
-		neighborB, err := json.Marshal(&BroadcastBody{
-			BaseBody: cmsg.BaseBody{
-				Type: BroadcastType,
-			},
-			Message: broadcastBody.Message,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		msgB, err := json.Marshal(&cmsg.Message{
-			Source:      b.node.ID,
-			Destination: neighbor,
-			Body:        neighborB,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		_, _ = fmt.Fprintf(os.Stdout, "%s\n", msgB)
+	if broadcastBody.MessageID == 0 || broadcastBody.Type == BroadcastReplyType {
+		return nil, nil
 	}
 
 	replyBodyB, err := json.Marshal(&BroadcastBody{
@@ -86,4 +70,31 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		Destination: msg.Source,
 		Body:        replyBodyB,
 	}, nil
+}
+
+func (b *Broadcast) notifyNeighbors(bb *BroadcastBody) error {
+	for _, neighbor := range b.node.Neighbors {
+		neighborB, err := json.Marshal(&BroadcastBody{
+			BaseBody: cmsg.BaseBody{
+				Type: BroadcastType,
+			},
+			Message: bb.Message,
+		})
+		if err != nil {
+			return err
+		}
+
+		msgB, err := json.Marshal(&cmsg.Message{
+			Source:      b.node.ID,
+			Destination: neighbor,
+			Body:        neighborB,
+		})
+		if err != nil {
+			return err
+		}
+
+		_, _ = fmt.Fprintf(os.Stdout, "%s\n", msgB)
+	}
+
+	return nil
 }

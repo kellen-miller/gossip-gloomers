@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 
 	cmsg "github.com/kellen-miller/gossip-gloomers/common/message"
@@ -15,8 +14,8 @@ const (
 )
 
 type Read struct {
-	n           *node.Node
-	valsSeenSet *hashset.Set[int]
+	n            *node.Node
+	messagesSeen *hashset.Set[int]
 }
 
 type ReadBody struct {
@@ -24,14 +23,11 @@ type ReadBody struct {
 	Messages []int `json:"messages"`
 }
 
-func NewRead(ctx context.Context, n *node.Node, valsSeenChan chan int) *Read {
-	r := &Read{
-		n:           n,
-		valsSeenSet: hashset.New[int](),
+func NewRead(n *node.Node, messagesSeen *hashset.Set[int]) *Read {
+	return &Read{
+		n:            n,
+		messagesSeen: messagesSeen,
 	}
-
-	go r.processSeenChan(ctx, valsSeenChan)
-	return r
 }
 
 func (r *Read) Types() []string {
@@ -49,7 +45,7 @@ func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 			Type:      ReadReplyType,
 			InReplyTo: readBody.MessageID,
 		},
-		Messages: r.valsSeenSet.Values(),
+		Messages: r.messagesSeen.Values(),
 	})
 	if err != nil {
 		return nil, err
@@ -60,17 +56,4 @@ func (r *Read) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		Destination: msg.Source,
 		Body:        replyBodyB,
 	}, nil
-}
-
-func (r *Read) processSeenChan(ctx context.Context, seenChan chan int) {
-	defer close(seenChan)
-
-	for {
-		select {
-		case nodeID := <-seenChan:
-			r.valsSeenSet.Add(nodeID)
-		case <-ctx.Done():
-			return
-		}
-	}
 }

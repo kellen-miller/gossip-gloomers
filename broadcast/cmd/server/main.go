@@ -5,6 +5,7 @@ import (
 
 	"github.com/kellen-miller/gossip-gloomers/broadcast/internal/handler"
 	"github.com/kellen-miller/gossip-gloomers/common/node"
+	"github.com/ugurcsen/gods-generic/sets/hashset"
 )
 
 func main() {
@@ -13,12 +14,11 @@ func main() {
 
 	var (
 		n            = node.NewNode()
-		messagesChan = make(chan int)
+		messagesSeen = hashset.New[int]()
 	)
-
 	n.RegisterHandlers(
-		handler.NewBroadcast(n, messagesChan),
-		handler.NewRead(ctx, n, messagesChan),
+		handler.NewBroadcast(n, messagesSeen),
+		handler.NewRead(n, messagesSeen),
 		handler.NewTopology(n),
 	)
 

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,6 +13,8 @@ import (
 	"github.com/kellen-miller/gossip-gloomers/common/message"
 	"github.com/ugurcsen/gods-generic/sets/hashset"
 )
+
+var ErrFireAndForget = errors.New("fire and forget")
 
 type Handler interface {
 	Handle(msg *message.Message) (*message.Message, error)
