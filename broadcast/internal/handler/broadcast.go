@@ -48,7 +48,7 @@ func (b *Broadcast) Handle(msg *cmsg.Message) (*cmsg.Message, error) {
 		}
 	}
 
-	if broadcastBody.MessageID == 0 || broadcastBody.Type == BroadcastReplyType {
+	if broadcastBody.Type == BroadcastReplyType {
 		return nil, node.ErrNilResp
 	}
 
@@ -74,7 +74,8 @@ func (b *Broadcast) notifyNeighbors(bb *BroadcastBody) error {
 	for _, neighbor := range b.node.Neighbors {
 		bodyB, err := json.Marshal(&BroadcastBody{
 			BaseBody: cmsg.BaseBody{
-				Type: BroadcastType,
+				Type:      BroadcastType,
+				MessageID: bb.MessageID,
 			},
 			Message: bb.Message,
 		})
